@@ -2,16 +2,20 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const axios = require('axios')
 const app = express();
+const jwt = require('jsonwebtoken')
 const channelhash = require('./channelIds');
 const cors = require('cors');
 const { BCRYPT_WORK_FACTOR, SECRET_KEY } = require('./config');
 require('dotenv').config()
 app.use(express.json());
-
+// import { gql, GraphQLClient } from 'graffle'
+const { Client } = require('podcast-api');
 const userRoutes = require('./routes/users');
 app.use('/users', userRoutes)
 const pgp = require('pg-promise')
 const pool = require('./db.js');
+
+const podcastsAPIKey = process.env.PODCASTAPIKEY
 
 console.log('BCRYPT WORK FACTOR', BCRYPT_WORK_FACTOR)
 
@@ -72,10 +76,18 @@ app.get('/youtube', async (req, res, next) => {
 });
 
 app.post('/register', async (req, res, next) => {
-    const { firstname, lastname, username, password, email } = req.body;
-    console.log(req.body)
+    const { firstname, lastname, username, password, email } = req.query;
+    console.log(req.query)
 
     const hashedPwd = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+
+    const secretKey = process.env.SECRET_KEY
+
+    const payload = {
+        user : username
+    }
+
+    const jwtToken = jwt.sign(payload, secretKey)
 
     try {
         const result = await pool.query(`
@@ -83,7 +95,7 @@ app.post('/register', async (req, res, next) => {
 
         // await bcrypt.compare(password, hashedPwd)
         const user = result.rows[0].username;
-        let ans = res.status(201).json({ user })
+        let ans = res.status(201).json({ user, jwtToken })
         console.log('SUCCESS', ans)
         return ans
     } catch (e) {
@@ -108,8 +120,12 @@ app.post('/vault', async (req, res, next) => {
 )
 
 app.get('/vault', async (req, res, next) => {
+
+    let username = req.query
+    console.log(username)
+
     try {
-        const result = await pool.query(`SELECT * FROM VAULT WHERE USERNAME = $1`, ['SnoopDogg'] );
+        const result = await pool.query(`SELECT * FROM VAULT WHERE USERNAME = $1`, [username] );
         console.log(result.rows)
 
         return res.status(200).json(result.rows)
@@ -119,39 +135,68 @@ app.get('/vault', async (req, res, next) => {
 }
 )
 
+app.get('/podcasts', async (req, res, next) => {
+    
+    const term = req.query
+    console.log('TERM', term.term)
 
-// app.get('/login', async (req, res, next) => {
-//     try {
-//         const { username, password } = req.query;
+    const client = Client({apiKey: podcastsAPIKey});
 
-//         const results = await db.query(
-//             `SELECT username, password FROM users WHERE username = $1`, [username]);
+    client.search({
+        q: term.term,
+        language : 'English',
+        only_in: 'title, description',
+        page_size: 15,
+        type: 'episode'
+    }).then((resp) => {
+        console.log(resp.data.results);
+        return res.status(200).json(resp.data.results)
+    }). catch((e) => {
+        console.log(e)
+    })
 
-//         const user = results.rows[0].username;
-//         const pwd = results.rows[0].password;
+})
 
-//         if (user && pwd) {
-//             if (await bcrypt.compare(password, pwd)) {
-//                 let result = res.status(201).json({ user })
-//                 console.log('SUCCESS', result)
-//                 return result
-//             }
-//             else {
-//                 let ans = res.status(401).json({ error: 'Username and/or password do not match' })
-//                 return ans
-//             }
-//         }
+app.get('/login', async (req, res, next) => {
+    try {
+        const { username, password } = req.query;
+        console.log(req.query)
 
-//         if (!username || !password) {
-//             let ans = res.status(401).json({ error: 'Please add username or password' })
-//         }
-//     }
-//     catch (e) {
-//         return res.status(400).json({ error: 'Username and/or password do not match' })
+        const results = await pool.query(
+            `SELECT username, password FROM users WHERE username = $1`, [username]);
 
-//     }
-// }
-// )
+        const user = results.rows[0].username;
+        const pwd = results.rows[0].password;
+        const secretKey = process.env.SECRET_KEY
+
+        const payload = {
+            user : user
+        }
+
+        const jwtToken = jwt.sign(payload, secretKey)
+
+        if (user && pwd) {
+            if (await bcrypt.compare(password, pwd)) {
+                let result = res.status(201).json({ user, jwtToken })
+                console.log('SUCCESS', result)
+                return result
+            }
+            else {
+                let ans = res.status(401).json({ error: 'Username and/or password do not match' })
+                return ans
+            }
+        }
+
+        if (!username || !password) {
+            let ans = res.status(401).json({ error: 'Please add username or password' })
+        }
+    }
+    catch (e) {
+        return res.status(400).json({ error: 'Username and/or password do not match' })
+
+    }
+}
+)
 
 
 

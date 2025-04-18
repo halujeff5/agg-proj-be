@@ -31,6 +31,9 @@
   },
   "dependencies": {
     "google-auth-library": "^9.15.1",
-    "googleapis": "^148.0.0"
+    "googleapis": "^148.0.0",
+    "graffle": "^0.0.0",
+    "graphql": "^16.10.0",
+    "podcast-api": "^2.0.4"
   }
 }
