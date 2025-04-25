@@ -106,8 +106,8 @@ app.post('/register', async (req, res, next) => {
 
 app.post('/vault', async (req, res, next) => {
 
-    const { username, title, url, description, author, image, published_at } = req.body;
-    console.log(req.body)
+    const { username, title, url, description, author, image, published_at } = req.query;
+    console.log(req.query)
 
     try {
         const result = await pool.query(`INSERT INTO vault (username, title, url, description, author, image, published_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`, [username, title, url, description, author, image, published_at]);
@@ -122,10 +122,10 @@ app.post('/vault', async (req, res, next) => {
 app.get('/vault', async (req, res, next) => {
 
     let username = req.query
-    console.log(username)
+    console.log(username.username)
 
     try {
-        const result = await pool.query(`SELECT * FROM VAULT WHERE USERNAME = $1`, [username] );
+        const result = await pool.query(`SELECT * FROM VAULT WHERE USERNAME = $1`, [username.username] );
         console.log(result.rows)
 
         return res.status(200).json(result.rows)
