@@ -223,13 +223,14 @@ app.get('/newsTTS', async (req, res, next) => {
 
         const searchTag = await driver.findElements(By.tagName('p'));
         console.log('im here', searchTag)
-        console.log('# of P tags', searchTag.length)
+        console.log('# of p tags', searchTag.length)
 
         const combinedText = []
         for (const paragraph of searchTag) {
             const headingText = await paragraph.getText()
             combinedText.push(headingText)
         }
+            console.log(combinedText)
             let ans = await createAudioFileFromText(combinedText.toString())
             console.log('many texts', ans)
             return res.status(201).json({ data: ans })
