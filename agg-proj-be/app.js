@@ -8,11 +8,11 @@ const app = express()
 app.use(express.json())
 import { Client } from 'podcast-api';
 import userRoutes from './routes/users.js';
-import { Builder, Browser, By, Key, until } from 'selenium-webdriver';
+import { Builder, Browser, By } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome.js';
 app.use('/users', userRoutes);
 import pool from './db.js';
-import { createAudioFileFromText } from './helpers/middleware.js';
+import { createAudioFromText } from './helpers/middleware.js';
 
 
 
@@ -52,8 +52,7 @@ const apiKey = process.env.YOUTUBEAPIKEY
 
 app.get('/', async (req, res, next) => {
     console.log('Im HERE 3')
-    res.send(`<h1>Listen to some music!</h1>
-    <audio controls src='/Users/Spare/agg-proj-be/5e076c6b-b33f-45b8-9769-4ef181932629.mp3'></audio>`)
+
     next()
 })
 
@@ -221,8 +220,8 @@ app.get('/newsTTS', async (req, res, next) => {
 
         driver.get(URLstring);
 
-        const searchTag = await driver.findElements(By.tagName('p'));
-        console.log('im here', searchTag)
+        const searchTag = await driver.findElements(By.css('p'));
+        // console.log('im here', searchTag)
         console.log('# of p tags', searchTag.length)
 
         const combinedText = []
@@ -231,15 +230,16 @@ app.get('/newsTTS', async (req, res, next) => {
             combinedText.push(headingText)
         }
             console.log(combinedText)
-            let ans = await createAudioFileFromText(combinedText.toString())
+            let ans = await createAudioFromText(combinedText)
             console.log('many texts', ans)
-            return res.status(201).json({ data: ans })
-        
-    } finally {
+            return res.status(201).json({ data: ans})
+    }
+    finally {
         if (driver) {
             driver.quit()
         }
     }
+
 });
 
 

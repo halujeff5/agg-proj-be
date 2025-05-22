@@ -6,7 +6,7 @@ const pool = new pg.Pool({
     database: process.env.PGDATABASE,
     user: process.env.PGUSER,
     password: process.env.PGPASSWORD,
-    port: process.env.PGPORT ? parseInt(process.env.PGPORT) : 5432,
+    port: process.env.PGPORT ? process.env.PGPORT : 5431,
   });
   
 

@@ -22,7 +22,7 @@
     "express-jwt": "^8.5.1",
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.9",
-    "openai": "^4.97.0",
+    "openai": "^4.103.0",
     "pg": "^8.14.1",
     "pg-promise": "^11.13.0",
     "react-router": "^7.5.2",
@@ -33,7 +33,7 @@
   "dependencies": {
     "aws-sdk": "^2.1692.0",
     "chromedriver": "^135.0.4",
-    "elevenlabs": "^1.57.0",
+    "elevenlabs": "^1.58.0",
     "google-auth-library": "^9.15.1",
     "googleapis": "^148.0.0",
     "graffle": "^0.0.0",
